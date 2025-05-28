@@ -6,13 +6,32 @@ const form = useTemplateRef('form')
 const route = useRoute()
 const { todo } = useTodo(Number(route.params.id))
 const { updateTodo } = useTodoUpdate()
+const state = reactive<Todo>({
+  id: 0,
+  text: '',
+  completed: false,
+  createdAt: new Date(),
+  updatedAt: new Date()
+})
+watch(todo, newTodo => {
+  if (newTodo) {
+    // Update the state with the fetched todo data
+    Object.assign(state, newTodo)
+  }
+})
+onMounted(() => {
+  // Initialize the state with the fetched todo data
+  if (todo.value) {
+    Object.assign(state, todo.value)
+  }
+})
 
 // This variable is set to false to emphasize that the form values are
 // being reset to the original state after submission, rather than keeping the
 // edited values. If actuallySaveData is false, the form will not submit.
 // If actuallySaveData is true, the form will submit and the form will
 // only briefly revert to the original state before the new values are updated.
-const actuallySaveData = ref(false)
+const actuallySaveData = ref(true)
 
 async function save(event: FormSubmitEvent<Todo>) {
   console.log('Saving todo:', event)
@@ -66,7 +85,7 @@ async function save(event: FormSubmitEvent<Todo>) {
       v-if="todo"
       ref="form"
       :schema="todoSchema"
-      :state="todo"
+      :state="state"
       class="flex flex-col gap-4 p-4 rounded-lg border-gray-400 shadow-md"
       @submit="save"
     >
@@ -84,7 +103,7 @@ async function save(event: FormSubmitEvent<Todo>) {
         hint="Change the text and save. Why does the form revert to the original state after submission?"
       >
         <UInput
-          v-model="todo.text"
+          v-model="state.text"
           placeholder="Enter todo text"
           class="w-full"
         />
@@ -92,9 +111,9 @@ async function save(event: FormSubmitEvent<Todo>) {
       <UFormField
         name="completed"
         label="Completed"
-        hint="Clicking this sets completed to true but does not update the UI. Also, I can't uncheck it. Why?"
+        hint="Clicking this sets state.completed to true but does not update the UI. Also, I can't uncheck it."
       >
-        <UCheckbox v-model="todo.completed" label="Completed" />
+        <UCheckbox v-model="state.completed" label="Completed" />
       </UFormField>
 
       <div class="flex mt-4">
